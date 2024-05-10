@@ -2,23 +2,41 @@ package main
 
 import (
 	"log"
-	"net/http"
 
+	"github.com/arizdn234/hotel-mawar-indah-availability-api/db"
+	"github.com/arizdn234/hotel-mawar-indah-availability-api/internal/api"
+	"github.com/arizdn234/hotel-mawar-indah-availability-api/internal/repository"
+	"github.com/arizdn234/hotel-mawar-indah-availability-api/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	router := gin.Default()
-
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Welcome to Hotel Mawar Indah Availability API",
-		})
-	})
-
-	port := ":8080"
-	log.Printf("Server is running on port %s\n", port)
-	if err := router.Run(port); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	if err := db.InitDB(); err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
 	}
+
+	roomRepository := repository.NewRoomRepository(db.DB)
+	roomService := service.NewRoomService(roomRepository)
+	roomHandler := api.NewRoomHandler(roomService)
+
+	gin.SetMode(gin.ReleaseMode)
+
+	r := gin.Default()
+
+	rooms := r.Group("/rooms")
+	{
+		// r.Use()
+
+		rooms.GET("/", roomHandler.GetAllRooms)
+		rooms.GET("/:id", roomHandler.GetRoomByID)
+		rooms.POST("/", roomHandler.CreateRoom)
+		rooms.PUT("/:id", roomHandler.UpdateRoom)
+		rooms.DELETE("/:id", roomHandler.DeleteRoom)
+	}
+
+	// r.GET("/availability", RoomAvailabilityCheck)
+	// r.POST("/reservation", RoomReservation)
+	// r.DELETE("/reservation/:id/cancel", ReservationCancellation)
+
+	r.Run(":8080")
 }
