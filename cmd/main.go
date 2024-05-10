@@ -32,6 +32,7 @@ func main() {
 
 	rooms := r.Group("/rooms")
 	{
+		// make sure this endpoint is only available to the admin role
 		// r.Use()
 
 		rooms.GET("/", roomHandler.GetAllRooms)
@@ -41,9 +42,9 @@ func main() {
 		rooms.DELETE("/:id", roomHandler.DeleteRoom)
 	}
 
-	// r.GET("/availability", RoomAvailabilityCheck)
-	// r.POST("/reservation", RoomReservation)
-	// r.DELETE("/reservation/:id/cancel", ReservationCancellation)
+	r.GET("/availability", roomHandler.RoomAvailabilityCheck)
+	r.POST("/reservation", roomHandler.RoomReservation)
+	r.DELETE("/reservation/:id/cancel", roomHandler.ReservationCancellation)
 
 	port := os.Getenv("PORT")
 
