@@ -93,3 +93,48 @@ func (h *RoomHandler) DeleteRoom(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Room deleted successfully"})
 }
+
+func (h *RoomHandler) RoomAvailabilityCheck(c *gin.Context) {
+	availableRooms, err := h.RoomService.GetAvailableRooms()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get available rooms"})
+		return
+	}
+
+	if len(availableRooms) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"message": "No rooms available"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"available_rooms": availableRooms})
+}
+
+func (h *RoomHandler) RoomReservation(c *gin.Context) {
+	var reservation model.Reservation
+	if err := c.ShouldBindJSON(&reservation); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+
+	if err := h.RoomService.ReserveRoom(&reservation); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to make room reservation"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Room reservation successful", "reservation": reservation})
+}
+
+func (h *RoomHandler) ReservationCancellation(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid room ID"})
+		return
+	}
+
+	if err := h.RoomService.CancelReservation(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to cancel reservation"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Reservation cancellation endpoint", "reservation_id": id})
+}
