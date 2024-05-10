@@ -9,7 +9,7 @@ type RoomRepository struct {
 	DB *gorm.DB
 }
 
-func NewRepository(db *gorm.DB) *RoomRepository {
+func NewRoomRepository(db *gorm.DB) *RoomRepository {
 	return &RoomRepository{DB: db}
 }
 
