@@ -18,6 +18,7 @@ CREATE TABLE reservations (
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     user_id INT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (room_id) REFERENCES rooms(id)
