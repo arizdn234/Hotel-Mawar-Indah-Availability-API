@@ -10,7 +10,8 @@ import (
 )
 
 type RoomHandler struct {
-	RoomService *service.RoomService
+	RoomService        *service.RoomService
+	ReservationService *service.ReservationService
 }
 
 func NewRoomHandler(roomService *service.RoomService) *RoomHandler {
@@ -131,7 +132,7 @@ func (h *RoomHandler) ReservationCancellation(c *gin.Context) {
 		return
 	}
 
-	if err := h.RoomService.CancelReservation(id); err != nil {
+	if err := h.ReservationService.CancelReservation(id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to cancel reservation"})
 		return
 	}

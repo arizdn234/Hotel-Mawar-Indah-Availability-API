@@ -62,17 +62,11 @@ func (s *RoomService) ReserveRoom(reservation *model.Reservation) error {
 
 	if err := s.ReservationRepository.CreateReservation(reservation); err != nil {
 		room.Available = true
-		s.RoomRepository.UpdateRoom(room)
+		if err := s.RoomRepository.UpdateRoom(room); err != nil {
+			return err
+		}
 		return err
 	}
 
-	return nil
-}
-
-func (s *RoomService) CancelReservation(id uint64) error {
-	err := s.RoomRepository.CancelReservation(uint(id))
-	if err != nil {
-		return err
-	}
 	return nil
 }
