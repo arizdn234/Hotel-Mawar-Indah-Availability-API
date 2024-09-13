@@ -40,3 +40,5 @@ main
 
 # Ignore user-specific files
 user.json
+
+Docker CLI client-accestoken.txt
