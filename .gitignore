@@ -40,6 +40,3 @@ main
 
 # Ignore user-specific files
 user.json
-
-# Ignore environment-specific files
-.env
