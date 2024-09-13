@@ -1,59 +1,55 @@
-# .github/workflows/ci-cd.yml
-
-name: CI/CD for Hotel Mawar Indah API
+name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
     branches:
       - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.22'
-
-      - name: Install Dependencies
-        run: go mod download
-
-      - name: Run Tests
-        run: go test ./... -v
-
-      - name: Build Docker Image
-        run: docker build -t hotel-mawar-indah-availability-api .
-
-      - name: Push Docker Image
-        env:
-          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-          DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-        run: |
-          echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
-          docker tag hotel-mawar-indah-availability-api:latest $DOCKER_HUB_USERNAME/hotel-mawar-indah-availability-api:latest
-          docker push $DOCKER_HUB_USERNAME/hotel-mawar-indah-availability-api:latest
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.22'
+        
+    - name: Install dependencies
+      run: go mod download
+      
+    - name: Build application
+      run: go build -o main ./cmd/main.go
+      
+    - name: Build Docker image
+      run: |
+        docker build -t arizidane/hotel-mawar-indah-availability-api:latest .
+        
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+        
+    - name: Push Docker image
+      run: |
+        docker push arizidane/hotel-mawar-indah-availability-api:latest
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy to Server
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SERVER_USER: ${{ secrets.SERVER_USER }}
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-        run: |
-          echo "$SSH_PRIVATE_KEY" | ssh-add -
-          ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << 'EOF'
-            docker pull $DOCKER_HUB_USERNAME/hotel-mawar-indah-availability-api:latest
-            docker-compose down
-            docker-compose up -d --build
-          EOF
+    - name: SSH to server and deploy
+      uses: appleboy/ssh-action@v0.1.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          docker pull arizidane/hotel-mawar-indah-availability-api:latest
+          docker stop my-container || true
+          docker rm my-container || true
+          docker run -d -p 8080:8080 --name my-container arizidane/hotel-mawar-indah-availability-api:latest
